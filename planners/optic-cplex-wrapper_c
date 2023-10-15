@@ -1,0 +1,78 @@
+#!/usr/bin/perl -w
+
+use IO::Handle;
+
+if ((scalar @ARGV) != 3) {
+	print "Usage: plan <domain> <problem> <solution>\n";
+	exit(1);
+}
+
+$dom = shift @ARGV;
+$prob = shift @ARGV;
+$soln = shift @ARGV;
+
+if (!(-e $dom)) {
+	print "Domain file $dom not found\n";
+	exit(1);
+}
+
+if (!(-e $prob)) {
+        print "Problem file $prob not found\n";
+        exit(1);
+}
+#Original
+# ./optic-cplex -I -n
+
+# The one with -h
+#./optic-cplex -N -e -c -h -I
+
+# The one without -h
+#./optic-cplex -N -e -S -c
+
+#option with -k i guess
+#./optic-cplex -N -e -c -k -I
+
+# -e is causing the planner to execute navi more than once in a row!
+
+# Change here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+open IN, "timeout 5 ./optic-cplex -c -S $dom $prob |";
+# open IN, "timeout 10 ./optic-cplex -n $dom $prob |";
+
+$| = 1;
+
+#$solnfile = 1;
+while (<IN>) {
+	if (m/; Plan found/ || m/; Solution Found/) {
+		#print "\n\n - Opening plan file $soln.$solnfile\n";
+		print "\n\n - Opening plan file $soln\n";
+		print;
+		#open OUT, "> $soln.$solnfile";
+		open OUT, "> $soln";
+		print OUT;
+		while (<IN>) {
+			if (m/^;/) {
+				print;
+				print OUT;
+				OUT->flush();
+			} elsif (m/\[/) {
+                                print;
+                                print OUT;
+				OUT->flush();
+                        } else {
+				print;
+				last;
+			}
+		}
+		close OUT;
+
+                #print "\n\n - Closed plan file $soln.$solnfile\n";
+                print "\n\n - Closed plan file $soln\n";
+
+		#++$solnfile;
+	} else {
+		print;
+	}
+
+}
+
+close IN;
