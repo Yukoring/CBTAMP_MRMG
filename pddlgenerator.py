@@ -31,7 +31,7 @@ class PDDLProblemGenerator:
         self.obj_ins = dict()
         self.basic_way_num = 0
 
-        self.velocity = 1.0
+        # self.velocity = 1.0
 
     class Instance:
         def __init__(self, ind, loc, instype):
@@ -62,6 +62,7 @@ class PDDLProblemGenerator:
             # Robot Var
             self.at = []
             self.action_duration = dict()
+            self.velocity = 0
 
             # Token Var
             self.token_name = ''
@@ -87,6 +88,7 @@ class PDDLProblemGenerator:
             for i in range(len(robot_map.service)):
                 robot.action_duration[robot_map.service[i]] = robot_map.action_cost[i]
             robot.at.append('wp'+str(wpind))
+            robot.velocity = robot_map.max_speed
             self.obj_ins['robot'] = self.obj_ins.get('robot', []) + [robot]
             wpind += 1
 
@@ -162,6 +164,7 @@ class PDDLProblemGenerator:
             for i in range(len(robot_map.service)):
                 robot.action_duration[robot_map.service[i]] = robot_map.action_cost[i]
             robot.at.append('wp'+str(wpind))
+            robot.velocity = robot_map.max_speed
             self.obj_ins['robot'] = self.obj_ins.get('robot', []) + [robot]
             wpind += 1
 
@@ -453,9 +456,6 @@ class PDDLProblemGenerator:
                     break
             roadmap.append(edge_id)
 
-        # hi = plot_prm_one(self.env, samples, roadmap, self.prm.goal_samples)
-        # plt.show()
-
         for i in range(way_len-1):
             wp1 = way_list[i]
             for j in range(i+1, way_len):
@@ -613,7 +613,7 @@ class PDDLProblemGenerator:
                     self.pFile.write('        ')
                     self.pFile.write('(at ' + ele.ind + ' ' + ele.at[0] + ')\n')
                     self.pFile.write('        ')
-                    self.pFile.write('(= (velocity ' + ele.ind + ') ' + str(self.velocity) + ')\n')
+                    self.pFile.write('(= (velocity ' + ele.ind + ') ' + str(ele.velocity) + ')\n')
                     for task_name, action_cost in ele.action_duration.items():
                         self.pFile.write('        ')
                         self.pFile.write('(= (task_duration ' + ele.ind + ' ' + task_name + ') ' + str(action_cost) + ')\n')
@@ -683,132 +683,12 @@ class PDDLProblemGenerator:
             raise BaseException(planFile + " does not exists.")
         f = open(planFile, 'r')
         lines = f.readlines()
-        path = dict()
-        #robot_dict = dict()
+        path = dict() # For robot inital path
         way_dict = dict()
+        plan_list = dict() # For Prioritized Planning
         cost = 0
         for r in self.obj_ins['robot']:
             path[r.ind] = []
-        for w in self.obj_ins['waypoint']:
-            way_dict[w.ind] = dict()
-            way_dict[w.ind]['loc'] = w.loc
-            for i in range(len(w.connected)):
-                way_dict[w.ind][w.connected[i]] = w.path[i]
-
-        for line in lines:
-            line = line.strip()
-            if 'metric' in line:
-                ind = line.find('metric')
-                line = line.replace('metric ', '')
-                cost = float(line[ind:])
-                #print('cost: ', cost)
-            if 'Time' in line:
-                ind = line.find('Time')
-                line = line.replace('Time ','')
-                cal_time = float(line[ind:])
-                #print('cal time: ', cal_time)
-            if '_navigate' in line:
-                # path 안에 모든 로봇 r에 대해 r의 이름이 line에 있으면 추가.
-                for r in path:
-                    if r in line:
-                        # Dispatch Time
-                        time_ind = line.find(':')
-                        dispatch_t = float(line[:time_ind])
-                        # Waypoint 1
-                        wp1_ind = line.find('wp')
-                        sub1_line = line[wp1_ind:]
-                        space_ind = sub1_line.find(' ')
-                        wp1 = sub1_line[:space_ind]
-                        # Waypoint 2
-                        sub2_line = line[wp1_ind+2:]
-                        wp2_ind = sub2_line.find('wp')
-                        sub2_line = sub2_line[wp2_ind:]
-                        blanket_ind = sub2_line.find(')')
-                        space_ind = sub2_line.find(' ')
-                        wp2 = sub2_line[:min(space_ind, blanket_ind)]
-                        # Path
-                        local_path = None
-                        if wp1 in way_dict:
-                            if wp2 in way_dict[wp1]:
-                                local_path = copy.deepcopy(way_dict[wp1][wp2])
-                        # Action duration
-                        bf_ind = line.find('[')
-                        be_ind = line.find(']')
-                        action_d = float(line[bf_ind+1:be_ind])
-                        path[r].append([local_path, dispatch_t, action_d])
-
-            if 'do_task_single' in line:
-                for r in path:
-                    if r in line:
-                        # Dispatch Time
-                        time_ind = line.find(':')
-                        dispatch_t = float(line[:time_ind])
-                        # Waypoint 1
-                        wp1_ind = line.find('wp')
-                        sub1_line = line[wp1_ind:]
-                        space_ind = sub1_line.find(' ')
-                        wp1 = sub1_line[:space_ind]
-                        if wp1 in way_dict:
-                            wp1 = way_dict[wp1]['loc']
-                        goal_ind = line.find('goal')
-                        b_ind = line.find(')')
-                        line2 = line[goal_ind:b_ind]
-                        s_ind = line2.find(' ')
-                        goal_name = line2[:s_ind]
-                        task_name = line2[s_ind+1:]
-
-                        bf_ind = line.find('[')
-                        be_ind = line.find(']')
-                        action_d = float(line[bf_ind+1:be_ind])
-                        path[r].append([[wp1], dispatch_t, action_d, task_name, goal_name])
-            if 'do_task_double' in line:
-                for r in path:
-                    if r in line:
-                        # Dispatch Time
-                        time_ind = line.find(':')
-                        dispatch_t = float(line[:time_ind])
-                        # Waypoint 1
-                        robot_ind = line.find(r)
-                        robot_line = line[robot_ind:]
-                        wp_ind = robot_line.find('wp')
-                        wp_line = robot_line[wp_ind:]
-                        space_ind = wp_line.find(' ')
-                        wp1 = wp_line[:space_ind]
-                        if wp1 in way_dict:
-                            wp1 = way_dict[wp1]['loc']
-
-                        # for goal
-                        goal_ind = line.find('goal')
-                        b_ind = line.find(')')
-                        line2 = line[goal_ind:b_ind]
-                        s_ind = line2.find(' ')
-                        goal_name = line2[:s_ind]
-                        task_name = line2[s_ind+1:]
-
-                        bf_ind = line.find('[')
-                        be_ind = line.find(']')
-                        action_d = float(line[bf_ind+1:be_ind])
-                        path[r].append([[wp1], dispatch_t, action_d, task_name, goal_name])
-        f.close()
-
-        return path, cost, cal_time
-
-
-    def parse_plan(self, planFile):
-        """
-        Plan parse for prioritized planning
-        output is agent - waypoint - action set
-        """
-        f = Path(planFile)
-        if not f.is_file():
-            raise BaseException(planFile + " does not exists.")
-        f = open(planFile, 'r')
-        lines = f.readlines()
-        plan_list = dict()
-        #robot_dict = dict()
-        way_dict = dict()
-        cost = 0
-        for r in self.obj_ins['robot']:
             plan_list[r.ind] = []
         for w in self.obj_ins['waypoint']:
             way_dict[w.ind] = dict()
@@ -822,16 +702,20 @@ class PDDLProblemGenerator:
                 ind = line.find('metric')
                 line = line.replace('metric ', '')
                 cost = float(line[ind:])
-                #print('cost: ', cost)
             if 'Time' in line:
                 ind = line.find('Time')
                 line = line.replace('Time ','')
                 cal_time = float(line[ind:])
-                #print('cal time: ', cal_time)
+            if 'Cost:' in line:
+                ind = line.find('Cost:')
+                line = line.replace('Cost: ','')
+                cost = float(line[ind:])
             if '_navigate' in line:
-                # path 안에 모든 로봇 r에 대해 r의 이름이 line에 있으면 추가.
-                for r in plan_list:
+                for r in path:
                     if r in line:
+                        # Dispatch Time
+                        time_ind = line.find(':')
+                        dispatch_t = float(line[:time_ind])
                         # Waypoint 1
                         wp1_ind = line.find('wp')
                         sub1_line = line[wp1_ind:]
@@ -845,15 +729,28 @@ class PDDLProblemGenerator:
                         space_ind = sub2_line.find(' ')
                         wp2 = sub2_line[:min(space_ind, blanket_ind)]
                         # Path
+                        wp1_temp = None
+                        wp2_temp = None
                         if wp1 in way_dict:
-                            wp1 = way_dict[wp1]['loc']
+                            wp1_temp = way_dict[wp1]['loc']
                         if wp2 in way_dict:
-                            wp2 = way_dict[wp2]['loc']
-                        plan_list[r].append([wp1, wp2])
-
+                            wp2_temp = way_dict[wp2]['loc']
+                        local_path = None
+                        if wp1 in way_dict:
+                            if wp2 in way_dict[wp1]:
+                                local_path = copy.deepcopy(way_dict[wp1][wp2])
+                        # Action duration
+                        bf_ind = line.find('[')
+                        be_ind = line.find(']')
+                        action_d = float(line[bf_ind+1:be_ind])
+                        path[r].append([local_path, dispatch_t, action_d])
+                        plan_list[r].append([wp1_temp, wp2_temp])
             if 'do_task_single' in line:
-                for r in plan_list:
+                for r in path:
                     if r in line:
+                        # Dispatch Time
+                        time_ind = line.find(':')
+                        dispatch_t = float(line[:time_ind])
                         # Waypoint 1
                         wp1_ind = line.find('wp')
                         sub1_line = line[wp1_ind:]
@@ -861,7 +758,6 @@ class PDDLProblemGenerator:
                         wp1 = sub1_line[:space_ind]
                         if wp1 in way_dict:
                             wp1 = way_dict[wp1]['loc']
-
                         goal_ind = line.find('goal')
                         b_ind = line.find(')')
                         line2 = line[goal_ind:b_ind]
@@ -872,11 +768,14 @@ class PDDLProblemGenerator:
                         bf_ind = line.find('[')
                         be_ind = line.find(']')
                         action_d = float(line[bf_ind+1:be_ind])
+                        path[r].append([[wp1], dispatch_t, action_d, task_name, goal_name])
                         plan_list[r].append([wp1, action_d, task_name, goal_name])
-
             if 'do_task_double' in line:
-                for r in plan_list:
+                for r in path:
                     if r in line:
+                        # Dispatch Time
+                        time_ind = line.find(':')
+                        dispatch_t = float(line[:time_ind])
                         # Waypoint 1
                         robot_ind = line.find(r)
                         robot_line = line[robot_ind:]
@@ -898,10 +797,11 @@ class PDDLProblemGenerator:
                         bf_ind = line.find('[')
                         be_ind = line.find(']')
                         action_d = float(line[bf_ind+1:be_ind])
+                        path[r].append([[wp1], dispatch_t, action_d, task_name, goal_name])
                         plan_list[r].append([wp1, action_d, task_name, goal_name])
         f.close()
 
-        return plan_list
+        return path, cost, cal_time, plan_list
 
     def generate_path(self, parsed_path):
         """

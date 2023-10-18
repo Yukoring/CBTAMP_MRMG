@@ -12,7 +12,8 @@ from matplotlib import animation
 
 from descartes import PolygonPatch
 
-plt.rcParams['animation.ffmpeg_path'] = '/home/k1756593/Downloads/ffmpeg'
+plt.rcParams['animation.ffmpeg_path'] = 'ffmpeg'
+
 Colors = ['yellow', 'orange', 'magenta', 'black', 'red', 'blue', 'green', 'white']
 Robot_Colors = ['red', 'blue', 'yellowgreen', 'tan', 'slategrey', 'pink', 'magenta', 'teal']
 # Robot_Colors = ['blue', 'red', 'red', 'blue', 'slategrey', 'pink', 'magenta', 'teal']
@@ -33,6 +34,7 @@ def plot_environment(env, t, figsize=None):
 
     f= plt.figure("Environment", figsize=(8 * aspect, 8))
     ax = f.add_subplot(111)
+    ax.clear()
 
     for name, obs in env.obstacles_map.items():
         patch = PolygonPatch(obs, fc='blue', ec='blue', alpha=0.5, zorder=20)
@@ -60,6 +62,7 @@ def plot_voronoi(env, samples, goals, t, figsize=None):
 
     f= plt.figure("Voronoi", figsize = (8 * aspect, 8))
     ax = f.add_subplot(111)
+    ax.clear()
 
     for name, obs in env.obstacles_map.items():
         patch = PolygonPatch(obs, fc='blue', ec='blue', alpha=0.5, zorder=20)
@@ -100,6 +103,7 @@ def plot_prm(env, samples, roadmap, goals, t, figsize=None):
         if not rr in plot_prm:
             f = plt.figure("PRM", figsize=(8 * aspect, 8))
             ax = f.add_subplot(111)
+            ax.clear()
             for name, obs in env.obstacles_map.items():
                 patch = PolygonPatch(obs, fc='blue', ec='blue', alpha=0.5, zorder=20)
                 ax.add_patch(patch)
@@ -142,6 +146,7 @@ def plot_obj_check(env, makeprob, goals, count, t, figsize=None):
 
     f= plt.figure("obj_check", figsize = (8 * aspect, 8))
     ax = f.add_subplot(111)
+    ax.clear()
 
     for name, obs in env.obstacles_map.items():
         patch = PolygonPatch(obs, fc='blue', ec='blue', alpha=0.5, zorder=20)
@@ -178,8 +183,7 @@ def plot_obj_check(env, makeprob, goals, count, t, figsize=None):
     plt.savefig('figure/%d_%dth_3_obj_check.png'%(t,count))
     return ax
 
-
-def plot_plan(env, makeprob, goals, robot_path, count, early, figsize=None):
+def plot_plan(env, makeprob, goals, robot_path, count, domain, t, figsize=None):
     plot_ax = {}
 
     minx, miny, maxx, maxy = env.bounds
@@ -192,6 +196,7 @@ def plot_plan(env, makeprob, goals, robot_path, count, early, figsize=None):
             f = plt.figure("%0.2f_plan"%rr, figsize=(8 * aspect, 8))
             ax = f.add_subplot(111)
             ax.clear()
+
             for name, obs in env.obstacles_map.items():
                 patch = PolygonPatch(obs, fc='blue', ec='blue', alpha=0.5, zorder=20)
                 ax.add_patch(patch)
@@ -228,17 +233,18 @@ def plot_plan(env, makeprob, goals, robot_path, count, early, figsize=None):
             path = robot_path[key]['path_only']
             if len(path) > 1:
                 plot_path(plot_ax[rr], path, rr, val.index)
-        if early == 0:
-            plt.savefig('figure/%dth_4_init_plan_%0.2f.png'%(count,rr))
-        elif early == 1:
-            plt.savefig('figure/%dth_4_early_plan_%0.2f.png'%(count, rr))
-        elif early == 2:
-            plt.savefig('figure/%dth_4_late_plan_%0.2f.png'%(count,rr))
-        elif early == 3:
-            plt.savefig('figure/%dth_4_const_plan_%0.2f.png'%(count,rr))
+        if domain == 0:
+            plt.savefig('figure/%d_%dth_4_early_plan_%0.2f.png'%(t, count,rr))
+        elif domain == 1:
+            plt.savefig('figure/%d_%dth_4_late_plan_%0.2f.png'%(t, count, rr))
+        elif domain == 2:
+            plt.savefig('figure/%d_%dth_4_const_plan_%0.2f.png'%(t, count,rr))
+        elif domain == 3:
+            plt.savefig('figure/%d_%dth_4_prioritized_plan_%0.2f.png'%(t, count,rr))
+
     return plot_ax
 
-def plot_best_plan(env, obj, goals, robot_path, count, figsize=None):
+def plot_best_plan(env, obj, goals, robot_path, t, figsize=None):
     plot_ax = {}
 
     minx, miny, maxx, maxy = env.bounds
@@ -279,10 +285,10 @@ def plot_best_plan(env, obj, goals, robot_path, count, figsize=None):
             path = robot_path[key]['path_only']
             if len(path) > 1:
                 plot_path(plot_ax[rr], path, rr, val.index)
-        plt.savefig('figure/%dth_4_best_plan_%0.2f.png'%(count,rr))
+        plt.savefig('figure/%d_best_plan_%0.2f.png'%(t,rr))
     return plot_ax
 
-def plot_collision_update(env, prm, col_env, goals, count, figsize=None):
+def plot_collision_update(env, prm, col_env, goals, count, t, figsize=None):
     minx, miny, maxx, maxy = env.bounds
 
     aspect = maxx/maxy
@@ -361,10 +367,10 @@ def plot_collision_update(env, prm, col_env, goals, count, figsize=None):
     plt.ylim([miny, maxy])
     plt.title("Collision Construction")
     ax.set_aspect('equal', adjustable='box')
-    plt.savefig('figure/%dth_2_col_update.png'%count)
+    plt.savefig('figure/%d_%dth_2_col_update.png'%(t,count))
     return ax
 
-def plot_collision(env, prm, collision, goals, count, figsize=None):
+def plot_collision(env, prm, collision, goals, count, t, figsize=None):
     minx, miny, maxx, maxy = env.bounds
 
     aspect = maxx/maxy
@@ -415,52 +421,7 @@ def plot_collision(env, prm, collision, goals, count, figsize=None):
     plt.ylim([miny, maxy])
     plt.title("Just Check")
     ax.set_aspect('equal', adjustable='box')
-    plt.savefig('figure/%dth_1_col_check.png'%count)
-    return ax
-
-def plot_obj_final(env, instant, goals, count, figsize=None):
-    minx, miny, maxx, maxy = env.bounds
-
-    aspect = maxx/maxy
-
-    f= plt.figure("obj_check", figsize = (8 * aspect, 8))
-    ax = f.add_subplot(111)
-    ax.clear()
-
-    for name, obs in env.obstacles_map.items():
-        patch = PolygonPatch(obs, fc='blue', ec='blue', alpha=0.5, zorder=20)
-        ax.add_patch(patch)
-
-    for name, goal in env.goals_map.items():
-        if goal['based'] == 'region':
-            plot_poly(ax, goal['shape'], 'green')
-
-    for name, robot in env.robots_map.items():
-        buffered_robot = Point(robot.pos).buffer(robot.robot_radius)
-        plot_robot(ax, buffered_robot, robot.index)
-    for i, ele in enumerate(goals):
-        for goal in ele:
-            buffered_goal_sample = Point(goal).buffer(0.10)
-            plot_goal(ax, buffered_goal_sample, i)
-
-    way_list = instant['waypoint']
-
-    for i in range(len(way_list)-1):
-        connect = way_list[i].connected
-        loc_wp1 = way_list[i].loc
-        for j in range(i+1, len(way_list)):
-            if way_list[j].ind in connect:
-                loc_wp2 = way_list[j].loc
-                line = LineString([loc_wp1, loc_wp2])
-                plot_line(ax, line)
-
-    plot_text(ax, instant)
-
-    plt.xlim([minx, maxx])
-    plt.ylim([miny, maxy])
-    plt.title("Task Domain View")
-    ax.set_aspect('equal', adjustable='box')
-    plt.savefig('figure/%dth_3_obj_check.png'%count)
+    plt.savefig('figure/%d_%dth_1_col_check.png'%(t, count))
     return ax
 
 def plot_text(ax, instance):

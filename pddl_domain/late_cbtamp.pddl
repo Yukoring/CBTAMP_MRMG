@@ -109,6 +109,7 @@
     :parameters (?r - robot ?from ?to - normal_way)
     :duration (= ?duration (/ (distance ?from ?to) (velocity ?r)))
     :condition (and (at start (at ?r ?from))
+    		     (over all (vertex_free ?from))
                     (over all (vertex_free ?to))
                     (over all (connected ?from ?to)))
     :effect (and (at start (not (at ?r ?from)))
