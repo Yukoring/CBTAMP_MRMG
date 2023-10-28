@@ -1,12 +1,6 @@
-from copy import deepcopy
-import enum
 import random
 import copy
 import time
-from re import A, I, L
-from tracemalloc import start
-from types import new_class
-from black import Line
 from shapely.geometry import Point, LineString
 from utils import *
 

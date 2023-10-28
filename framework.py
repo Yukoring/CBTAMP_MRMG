@@ -252,7 +252,7 @@ if __name__ == '__main__':
                     obj_plot = plot_obj_check(env, makeprob, goal_samples, col_count, t)
 
                 test_time = time.time()
-                init_plan_dispatch, init_task_cost, init_cal_time, prioritized_plan = makeprob.parse_pddl_plan(planFile)
+                init_plan_dispatch, init_task_cost, init_cal_time, dummyplan = makeprob.parse_pddl_plan(planFile)
                 init_robot_path, init_total_cost, init_motion_cost = makeprob.generate_path(init_plan_dispatch)
                 elapsed_time = time.time() - test_time
                 motionplan_time += elapsed_time

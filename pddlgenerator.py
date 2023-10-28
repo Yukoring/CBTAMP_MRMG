@@ -1,11 +1,8 @@
-from math import degrees
 from pathlib import Path
 from shapely.geometry import Point, LineString
 import copy
-import time
 from utils import get_sum_of_cost, KDTree, get_distance
 
-import matplotlib.pyplot as plt
 from visualize import *
 
 class PDDLProblemGenerator:

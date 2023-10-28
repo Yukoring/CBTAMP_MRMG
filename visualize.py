@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-import enum
 from matplotlib.patches import Circle, Polygon, Rectangle
 from shapely.geometry import LineString, Point
 import matplotlib.pyplot as plt
-from matplotlib import transforms
 import numpy as np
 import math
 from copy import deepcopy
