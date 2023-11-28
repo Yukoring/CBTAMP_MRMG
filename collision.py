@@ -280,10 +280,12 @@ def handle_endpoint(prm, new_col):
     delete_samples = []
     start_samples = []
 
+    # If there is important points (goal, robot initial) inside of collision region, they must be the abstraction for task planner
     for ele in internal_imp:
         buffered_end.append(Point(ele).buffer(max_rr*3.0)) #VRP CHANGE 3.0 -> 4.0
         temp_end.append(ele)
 
+    # Delete the samples near important point which can make collision
     for sample in col_samples:
         p_sample = Point(sample)
         for ele in buffered_end:
@@ -294,6 +296,7 @@ def handle_endpoint(prm, new_col):
         if not sample in delete_samples:
             start_samples.append(sample)
 
+    # Extracting the available abstracting candidate until there is no candidate.
     while True:
         if not start_samples:
             break
@@ -314,6 +317,7 @@ def handle_endpoint(prm, new_col):
                         max_dist = get_distance(temp_a, temp_b)
                         a = temp_a
                         b = temp_b
+            # 가장 먼 거리에 있는 두 포인트가 기준보다 크면 두 포인트가 abstraction으로 추가되고 포인트 주변 샘플을 없앤다.
             if max_dist > max_rr * 4.0: # VRP 4.0 -> 6.0
                 temp_end.append(a)
                 temp_end.append(b)
@@ -324,6 +328,7 @@ def handle_endpoint(prm, new_col):
                     if not buffered_a.contains(p_sample) and not buffered_b.contains(p_sample):
                         temp_start.append(sample)
                 start_samples = temp_start
+            # 가장 먼 거리에 있는 두 포인트가 기준보다 작으면 충돌영역 밖 샘플 중 가장 많은 sample을 포함하는 sample이 abstraction된다.
             else:
                 min_dist = 100000
                 max_num_sam = -1
@@ -368,6 +373,8 @@ def handle_endpoint(prm, new_col):
         #c_roadmap_samples, temp_end
         temp_nears = []
         near_samples = {}
+
+        # 충돌 제외 영역 샘플들 하나씩 task waypoint주변에 있는지 파악해서 temp_near에 넣는다.
         for sample in c_roadmap_samples:
             p_sample = Point(sample)
             near_flag = False
@@ -379,6 +386,8 @@ def handle_endpoint(prm, new_col):
             if near_flag:
                 temp_nears.append(sample)
 
+        # 각 가까운 샘플들의 거리를 확인해 제일 가까운 task waypoint에 배정하는데,
+        # 그 때, 충돌을 생각해서 특정 거리 이상에 존재하거나 샘플이 external important이거나, voronoi sample에 포함되지 않을때에만 추가한다.
         for sample in temp_nears:
             min_dist = 100000
             min_end = None
@@ -414,6 +423,8 @@ def handle_endpoint(prm, new_col):
                         break
                 if not imp_flag:
                     temp_entry_candidates.append(ele2)
+            # 여기까지 external 때문에 하는것. 근처 지워놓는거
+
             entry_candidates = temp_entry_candidates
 
             while True:
@@ -488,6 +499,8 @@ def handle_endpoint(prm, new_col):
             new_vor_way.append(ele)
 
     prm.vor_ways = new_vor_way
+
+    print(new_entry)
 
     return new_entry
 

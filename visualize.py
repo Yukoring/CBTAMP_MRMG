@@ -212,14 +212,14 @@ def plot_plan(env, makeprob, goals, robot_path, count, domain, t, figsize=None):
                     buffered_goal_sample = Point(goal).buffer(0.10)
                     plot_goal(ax, buffered_goal_sample, i)
 
-            for sample in makeprob.samples[rr]:
-                buffered_sample = Point(sample).buffer(0.05)
-                plot_poly(ax, buffered_sample, 'black')
+            # for sample in makeprob.samples[rr]:
+            #     buffered_sample = Point(sample).buffer(0.05)
+            #     plot_poly(ax, buffered_sample, 'black')
 
-            for i, first_sample in enumerate(makeprob.roadmaps[rr]):
-                for second_sample in first_sample:
-                    line = LineString([makeprob.samples[rr][i], makeprob.samples[rr][second_sample]])
-                    plot_line(ax, line)
+            # for i, first_sample in enumerate(makeprob.roadmaps[rr]):
+            #     for second_sample in first_sample:
+            #         line = LineString([makeprob.samples[rr][i], makeprob.samples[rr][second_sample]])
+            #         plot_line(ax, line)
             plot_text(ax, makeprob.obj_ins)
 
             plt.xlim([minx, maxx])
