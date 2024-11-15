@@ -247,7 +247,7 @@ class Environment:
                 overlap = False
                 g1 = self.get_random_point(margin_bounds)
                 goal_points = []
-                for point in [(-0.5, -0.5), (-0.5, 0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, -0.5)]:
+                for point in [(-0.35, -0.35), (-0.35, 0.35), (0.35, -0.35), (0.35, 0.35)]:
                     new_point = [round(point[0]+g1[0],2), round(point[1]+g1[1],2)]
                     goal_points.append(new_point)
                 for points in itertools.permutations(goal_points):

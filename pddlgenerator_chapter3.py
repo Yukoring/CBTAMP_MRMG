@@ -172,10 +172,17 @@ class PDDLProblemGenerator:
             for i in range(len(goal_map['service'])):
                 temp_task[(goal_map['service'][i], goal_map['service_type'][i])] = temp_task.get((goal_map['service'][i], goal_map['service_type'][i]), []) + [name]
             for sample in goal_map['samples']:
-                waypoint = self.Instance('wp'+str(wpind), sample, 'normal_way')
-                job.located.append('wp'+str(wpind))
-                wpind += 1
-                self.obj_ins['waypoint'] = self.obj_ins.get('waypoint', []) + [waypoint]
+                new_flag = True
+                for i in self.obj_ins['waypoint']:
+                    if sample == i.loc:
+                        job.located.append(i.ind)
+                        new_flag = False
+                        break
+                if new_flag:
+                    waypoint = self.Instance('wp'+str(wpind), sample, 'normal_way')
+                    job.located.append('wp'+str(wpind))
+                    wpind += 1
+                    self.obj_ins['waypoint'] = self.obj_ins.get('waypoint', []) + [waypoint]
             for ele in goal_map['order']:
                 job.order.append(ele)
             self.obj_ins['job'] = self.obj_ins.get('job', []) + [job]
@@ -231,337 +238,15 @@ class PDDLProblemGenerator:
                 temp_path1, temp_dist1, temp_path2, temp_dist2 = self.prm.QuerywithRoadmap(start_pos, goal_pos,
                                                         temp_samples, temp_roadmap, temp_skdtree, self.task_rr)
                 if temp_dist1 != -1:
-                    way_list[i].distance.append(temp_dist1)
+                    temp_path, temp_dist = self.prm.QueryTaskPlan(start_pos, goal_pos)
+                    way_list[i].distance.append(temp_dist)
                     way_list[i].connected.append(way_list[j].ind)
-                    way_list[i].path.append(temp_path1)
+                    way_list[i].path.append(temp_path)
                 if temp_dist2 != -1:
-                    way_list[j].distance.append(temp_dist2)
+                    temp_path, temp_dist = self.prm.QueryTaskPlan(goal_pos, start_pos)
+                    way_list[j].distance.append(temp_dist)
                     way_list[j].connected.append(way_list[i].ind)
-                    way_list[j].path.append(temp_path2)
-
-    def env_update(self, env_collision, new_vor):
-        """
-        Env update with Collision Line
-        env_collision = [special points, samples, collision type]
-            special points = [[endpoint, entrypoints, ...], ... ] if narrow col
-                             [[endpoint], [endpoint]]             if normal col
-            samples = 1-D array
-            collision type = 0 if narrow col, 1 if normal col
-        """
-        wpind = self.basic_way_num
-        tind = 0
-        self.vor_way = new_vor
-
-        # Initialize other things
-        self.obj_ins['waypoint'] = self.obj_ins['waypoint'][:wpind]
-        self.obj_ins['token'] = []
-        for ele in self.obj_ins['waypoint']:
-            ele.connected = []
-            ele.distance = []
-            ele.path = []
-            ele.collision_connect = []
-            ele.token_ind = None
-
-        # Change new vor sample cos there is deleted samples
-        for v_way in self.vor_way:
-            waypoint = self.Instance('wp'+str(wpind), v_way, 'normal_way')
-            self.obj_ins['waypoint'] = self.obj_ins.get('waypoint', []) + [waypoint]
-            wpind += 1
-
-        # PRM without collision samples
-        samples = []
-        roadmap = []
-        residual_sample = []
-
-        for collision in env_collision:
-            col_entry = collision[0]
-            col_samples = collision[1]
-            col_type = collision[2]
-            residual_sample += col_samples
-
-            # Narrow Collision
-            if col_type == 0:
-                token = self.Instance('t'+str(tind), None, 'token')
-                token.token_name = 'narrow_col_token'
-                token.token_samples = col_samples
-                tind += 1
-
-                temp_col_entry =[]
-                for ele in col_entry:
-                    temp_col_entry += ele
-
-                # Basic waypoint가 entry를 형성하지는 않지만 col region 안에 있을때 바꿔준다.
-                for i in range(self.basic_way_num):
-                    way_loc = self.obj_ins['waypoint'][i].loc
-                    if way_loc in col_samples and (not way_loc in temp_col_entry):
-                        self.obj_ins['waypoint'][i].instype = 'col_way'
-                        token.token_wp.append(self.obj_ins['waypoint'][i].ind)
-
-                # Entry waypoints들을 pddl instance로 형성하기 위해
-                # 길이가 1개면 only col_way, 2개면 1 col_way 1 waiting_way 이런식으로
-                for entry in col_entry:
-                    if len(entry) == 1:
-                        temp_wp1 = None
-                        for i in range(self.basic_way_num):
-                            if entry[0] == self.obj_ins['waypoint'][i].loc:
-                                temp_wp1 = self.obj_ins['waypoint'][i]
-                                temp_wp1.instype = 'col_way'
-                                token.token_wp.append(temp_wp1.ind)
-                                break
-                        if not temp_wp1:
-                            temp_wp1 = self.Instance('wp'+str(wpind), entry[0], 'col_way')
-                            wpind +=1
-                            token.token_wp.append(temp_wp1.ind)
-                            self.obj_ins['waypoint'] = self.obj_ins.get('waypoint', []) + [temp_wp1]
-                    elif len(entry) == 0:
-                        # Now only think about entry points 1 or 2 for narrow col
-                        raise Exception("Problem in Entry")
-                    else:
-                        temp_wp1 = None
-                        for i in range(self.basic_way_num):
-                            if entry[0] == self.obj_ins['waypoint'][i].loc:
-                                temp_wp1 = self.obj_ins['waypoint'][i]
-                                temp_wp1.instype = 'col_way'
-                                token.token_wp.append(temp_wp1.ind)
-                                break
-                        if not temp_wp1:
-                            temp_wp1 = self.Instance('wp'+str(wpind), entry[0], 'col_way')
-                            wpind +=1
-                            token.token_wp.append(temp_wp1.ind)
-                            self.obj_ins['waypoint'] = self.obj_ins.get('waypoint', []) + [temp_wp1]
-                        for i in range(1, len(entry)):
-                            temp_wp2 = None
-                            for j in range(self.basic_way_num):
-                                if entry[i] == self.obj_ins['waypoint'][j].loc:
-                                    temp_wp2 = self.obj_ins['waypoint'][j]
-                                    temp_wp2.instype = 'waiting_way'
-                                    token.token_wp.append(temp_wp2.ind)
-                                    break
-                            if not temp_wp2:
-                                temp_wp2 = self.Instance('wp'+str(wpind), entry[i], 'waiting_way')
-                                wpind +=1
-                                token.token_wp.append(temp_wp2.ind)
-                                self.obj_ins['waypoint'] = self.obj_ins.get('waypoint', []) + [temp_wp2]
-                            temp_wp1.collision_connect.append(temp_wp2.ind)
-                            temp_wp2.collision_connect.append(temp_wp1.ind)
-
-                self.obj_ins['token'] = self.obj_ins.get('token', []) + [token]
-
-            elif col_type == 1:
-                temp_col_entry = []
-                for ele in col_entry:
-                    #samples += ele
-                    temp_col_entry += ele
-
-                token = self.Instance('t'+str(tind), None, 'token')
-                token.token_name = 'normal_col_token'
-                token.token_samples = col_samples
-                tind += 1
-
-                for i in range(self.basic_way_num):
-                    way_loc = self.obj_ins['waypoint'][i].loc
-                    if way_loc in col_samples and (not way_loc in temp_col_entry):
-                        self.obj_ins['waypoint'][i].instype = 'reserved_way'
-                        self.obj_ins['waypoint'][i].token_ind = token.ind
-                        token.token_wp.append(self.obj_ins['waypoint'][i].ind)
-
-                for entry in col_entry:
-                    temp_wp1 = None
-                    for i in range(self.basic_way_num):
-                        if entry[0] == self.obj_ins['waypoint'][i].loc:
-                            temp_wp1 = self.obj_ins['waypoint'][i]
-                            temp_wp1.instype = 'reserved_way'
-                            temp_wp1.token_ind = token.ind
-                            token.token_wp.append(temp_wp1.ind)
-                            break
-                    if not temp_wp1:
-                        temp_wp1 = self.Instance('wp'+str(wpind), entry[0], 'reserved_way')
-                        temp_wp1.token_ind = token.ind
-                        wpind +=1
-                        token.token_wp.append(temp_wp1.ind)
-                        self.obj_ins['waypoint'] = self.obj_ins.get('waypoint', []) + [temp_wp1]
-                self.obj_ins['token'] = self.obj_ins.get('token', []) + [token]
-
-        # Same Token Connect
-        for ele in self.obj_ins['token']:
-            temp_token_way = ele.token_wp
-            token_way = []
-
-            if ele.token_name == 'narrow_col_token':
-                for way in self.obj_ins['waypoint']:
-                    if way.ind in temp_token_way and way.instype != 'waiting_way':
-                        token_way.append(way)
-            else:
-                for way in self.obj_ins['waypoint']:
-                    if way.ind in temp_token_way:
-                        token_way.append(way)
-
-            num_token_way = len(token_way)
-            buffered_path = []
-            for i in range(num_token_way-1):
-                for j in range(i+1, num_token_way):
-                    way_loc1 = token_way[i].loc
-                    way_loc2 = token_way[j].loc
-                    temp_path, temp_dist = self.prm.QueryTaskPlan(way_loc1, way_loc2)
-                    if temp_dist != -1:
-                        buffered_line = LineString(temp_path).buffer(self.task_rr)
-                        connect_flag = True
-                        for another_way in token_way:
-                        # for another_way in self.obj_ins['waypoint']:
-                            if another_way.loc != way_loc1 and another_way.loc != way_loc2:
-                                way_point = Point(another_way.loc).buffer(self.task_rr)
-                                # way_point = Point(another_way.loc)
-                                if buffered_line.intersects(way_point):
-                                # if buffered_line.contains(way_point):
-                                    connect_flag = False
-                                    break
-                        if connect_flag:
-                            for check_buffer in buffered_path:
-                                if not way_loc1 in check_buffer and not way_loc2 in check_buffer:
-                                    if buffered_line.intersects(check_buffer[2]):
-                                        connect_flag = False
-                                        break
-                        if connect_flag:
-                            token_way[i].collision_connect.append(token_way[j].ind)
-                            token_way[j].collision_connect.append(token_way[i].ind)
-                            buffered_path.append([way_loc1, way_loc2, buffered_line])
-
-
-        # Making PRM without collision
-        way_list = self.obj_ins['waypoint']
-        way_len = len(way_list)
-        for way in way_list:
-            if way.instype != 'waiting_way':
-                way_buffer = Point(way.loc).buffer(self.task_rr)
-                for w in self.task_samples:
-                    w_point = Point(w).buffer(self.task_rr)
-                    if way_buffer.intersects(w_point):
-                        residual_sample.append(w)
-            else:
-                samples.append(way.loc)
-
-        for sample in self.task_samples:
-            if not sample in residual_sample:
-                samples.append(sample)
-
-        skdtree = KDTree(samples)
-        cd = self.prm.casting_dist[self.task_rr]
-        nsample = len(samples)
-        knn = min(int(len(self.task_samples)/40), 15)
-
-        for (i, temp_point) in zip(range(nsample), samples):
-            index, dists = skdtree.search(temp_point, k=nsample)
-            edge_id = []
-            # 0 is self so start with 1
-            for j in range(1, len(index)):
-                npoint = samples[index[j]]
-                if self.prm.isEdgeCollisionFree(temp_point, npoint, self.task_rr) and get_distance(temp_point, npoint) < cd:
-                    edge_id.append(index[j])
-                if len(edge_id) >= knn:
-                    break
-            roadmap.append(edge_id)
-
-        for i in range(way_len-1):
-            wp1 = way_list[i]
-            for j in range(i+1, way_len):
-                wp2 = way_list[j]
-                if wp1.instype == 'col_way' and wp2.instype == 'col_way':
-                    if wp2.ind in wp1.collision_connect:
-                        path1, dist1 = self.prm.QueryTaskPlan(wp1.loc, wp2.loc)
-                        path2, dist2 = self.prm.QueryTaskPlan(wp2.loc, wp1.loc)
-                        wp1.distance.append(dist1)
-                        wp1.connected.append(wp2.ind)
-                        wp1.path.append(path1)
-                        wp2.distance.append(dist2)
-                        wp2.connected.append(wp1.ind)
-                        wp2.path.append(path2)
-                elif wp1.instype == 'col_way' and wp2.instype == 'waiting_way':
-                    if wp2.ind in wp1.collision_connect:
-                        path1, dist1 = self.prm.QueryTaskPlan(wp1.loc, wp2.loc)
-                        path2, dist2 = self.prm.QueryTaskPlan(wp2.loc, wp1.loc)
-                        if dist1 != -1:
-                            wp1.distance.append(dist1)
-                            wp1.connected.append(wp2.ind)
-                            wp1.path.append(path1)
-                        if dist2 != -1:
-                            wp2.distance.append(dist2)
-                            wp2.connected.append(wp1.ind)
-                            wp2.path.append(path2)
-                elif wp1.instype == 'waiting_way' and wp2.instype == 'col_way':
-                    if wp1.ind in wp2.collision_connect:
-                        path1, dist1 = self.prm.QueryTaskPlan(wp1.loc, wp2.loc)
-                        path2, dist2 = self.prm.QueryTaskPlan(wp2.loc, wp1.loc)
-                        if dist1 != -1:
-                            wp1.distance.append(dist1)
-                            wp1.connected.append(wp2.ind)
-                            wp1.path.append(path1)
-                        if dist2 != -1:
-                            wp2.distance.append(dist2)
-                            wp2.connected.append(wp1.ind)
-                            wp2.path.append(path2)
-                elif wp1.instype == 'reserved_way' and wp2.instype == 'reserved_way':
-                    if wp2.ind in wp1.collision_connect:
-                        path1, dist1 = self.prm.QueryTaskPlan(wp1.loc, wp2.loc)
-                        path2, dist2 = self.prm.QueryTaskPlan(wp2.loc, wp1.loc)
-                        wp1.distance.append(dist1)
-                        wp1.connected.append(wp2.ind)
-                        wp1.path.append(path1)
-                        wp2.distance.append(dist2)
-                        wp2.connected.append(wp1.ind)
-                        wp2.path.append(path2)
-                    elif wp1.token_ind != wp2.token_ind:
-                        path1, dist1, path2, dist2 = self.prm.QuerywithRoadmap(wp1.loc, wp2.loc, samples, roadmap, skdtree, self.task_rr)
-                        if dist1 != -1:
-                            wp1.distance.append(dist1)
-                            wp1.connected.append(wp2.ind)
-                            wp1.path.append(path1)
-                        if dist2 != -1:
-                            wp2.distance.append(dist2)
-                            wp2.connected.append(wp1.ind)
-                            wp2.path.append(path2)
-                elif wp1.instype == 'waiting_way' and wp2.instype == 'waiting_way':
-                    path1, dist1, path2, dist2 = self.prm.QuerywithRoadmap(wp1.loc, wp2.loc, samples, roadmap, skdtree, self.task_rr)
-                    if dist1 != -1:
-                        wp1.distance.append(dist1)
-                        wp1.connected.append(wp2.ind)
-                        wp1.path.append(path1)
-                    if dist2 != -1:
-                        wp2.distance.append(dist2)
-                        wp2.connected.append(wp1.ind)
-                        wp2.path.append(path2)
-                elif wp1.instype == 'normal_way' and wp2.instype == 'col_way':
-                    pass
-                elif wp1.instype == 'col_way' and wp2.instype == 'normal_way':
-                    pass
-                elif wp1.instype == 'reserved_way' and wp2.instype == 'col_way':
-                    pass
-                elif wp1.instype == 'col_way' and wp2.instype == 'reserved_way':
-                    pass
-                else:
-                    path1, dist1, path2, dist2 = self.prm.QuerywithRoadmap(wp1.loc, wp2.loc, samples, roadmap, skdtree, self.task_rr)
-                    if dist1 != -1:
-                        wp1.distance.append(dist1)
-                        wp1.connected.append(wp2.ind)
-                        wp1.path.append(path1)
-                    if dist2 != -1:
-                        wp2.distance.append(dist2)
-                        wp2.connected.append(wp1.ind)
-                        wp2.path.append(path2)
-
-        for ele in self.obj_ins['waypoint']:
-            if ele.instype == 'waiting_way':
-                ele.instype = 'normal_way'
-            if ele.instype == 'reserved_way':
-                ele.instype = 'col_way'
-
-        for ele in self.obj_ins['waypoint']:
-            if ele.instype == 'col_way':
-                ele.reserved = True
-
-        # For Only Normal Waypoints - expereiments
-        # for ele in self.obj_ins['waypoint']:
-        #     ele.instype = 'normal_way'
-        #     ele.reserved = False
+                    way_list[j].path.append(temp_path)
 
     def generate_header(self):
         """
@@ -622,6 +307,8 @@ class PDDLProblemGenerator:
                     #print(ele.instype)
                     self.pFile.write('        ')
                     self.pFile.write('(at ' + ele.ind + ' ' + ele.at[0] + ')\n')
+                    # self.pFile.write('        ')
+                    # self.pFile.write('(robot_free ' + ele.ind + ')\n')
                     self.pFile.write('        ')
                     self.pFile.write('(= (velocity ' + ele.ind + ') ' + str(ele.velocity) + ')\n')
                     for task_name, action_cost in ele.action_duration.items():
@@ -818,7 +505,6 @@ class PDDLProblemGenerator:
         parsed_path to robot_path
         @Retrun Path Data Structure like
         """
-        # print(parsed_path)
         robot_path = dict()
         total_cost = 0
         max_cost = 0
@@ -828,11 +514,8 @@ class PDDLProblemGenerator:
             path_only = []
             action_time = 0.0
 
-            # print(len(ele))
-
             if len(ele) == 0:
-                # ele.append([[self.robots[name].pos, self.robots[name].pos], 0.0, 0.01])
-                continue
+                pass
 
             if len(ele) == 1:
                 if len(ele[0][0]) == 1:

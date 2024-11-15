@@ -1,0 +1,27 @@
+random:
+  bounds: -5, -5, 5, 5
+  number_of_samples: 500
+  max_num_goals: 4
+  max_num_obstacles: 4
+  max_polygon: 6
+  diameter: 1.0
+robots:
+  num_of_robot: 4
+  robot:
+    robot0000:
+      robot_radius: 0.3 # [m]
+      service: taska, taskb
+      action_cost: [1.0, 15.0, 30.0, 60.0]
+    robot0001:
+      robot_radius: 0.3 # [m]
+      service: taska, taskb
+      action_cost: [60.0, 1.0, 15.0, 30.0]
+    robot0002:
+      robot_radius: 0.3 # [m]
+      service: taska, taskb
+      action_cost: [30.0, 60.0, 1.0, 15.0]
+    robot0003:
+      robot_radius: 0.3 # [m]
+      service: taska, taskb
+      action_cost: [15.0, 30.0, 60.0, 1.0]
+

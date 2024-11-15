@@ -76,6 +76,8 @@ class VoronoiPlanning:
         for i in range(len(sample_x)):
             sx = sample_x[i]
             sy = sample_y[i]
+            if sx > maxx or sx < minx or sy > maxy or sy <miny:
+                break
             p = Point(sx, sy)
             p_buffer = p.buffer(self.max_radius)
             contain_flag = False
@@ -108,6 +110,7 @@ class VoronoiPlanning:
                 r_sample_x = round(v_sample[i][0], 2)
                 r_sample_y = round(v_sample[i][1], 2)
                 self.vor_samples.append((r_sample_x, r_sample_y))
+        # self.vor_samples = v_sample
 
         return self.vor_samples
 
@@ -169,7 +172,7 @@ class VoronoiPlanning:
                 if (min_x < vor_s[0] < max_x) and (min_y < vor_s[1] < max_y):
                     vor_flag = False
                     for temp_vor in vor_way:
-                        if get_distance(temp_vor, vor_s) < self.max_radius * 6:
+                        if get_distance(temp_vor, vor_s) < self.max_radius * 6: #6
                             vor_flag = True
                             break
                     if not vor_flag:
@@ -177,11 +180,54 @@ class VoronoiPlanning:
             elif obs_num > 1 or (obs_num > 0 and bound_num > 0) or bound_num > 1:
                 vor_flag = False
                 for temp_vor in vor_way:
-                    if get_distance(temp_vor, vor_s) < self.max_radius * 6:
+                    if get_distance(temp_vor, vor_s) < self.max_radius * 6: #6
                         vor_flag = True
                         break
                 if not vor_flag:
                     vor_way.append(vor_s)
+            # else:
+            #     vor_flag = False
+            #     for temp_vor in vor_way:
+            #         if get_distance(temp_vor, vor_s) < self.max_radius * 6: #6
+            #             vor_flag = True
+            #             break
+            #     if not vor_flag:
+            #         vor_way.append(vor_s)
 
         return vor_way
+
+    def weighted_for_task(self, robot_map, goals, samples, weight):
+        waypoints = []
+        for key, robot in robot_map.items():
+            waypoints.append(robot.pos)
+        for goal in goals:
+            waypoints += goal
+        weight_way = []
+
+        #  For Filter
+        temp_weight_samples = []
+
+        for weight_s in samples:
+            way_flag = False
+            for way in waypoints:
+                if get_distance(way, weight_s) < self.max_radius * weight:
+                    way_flag = True
+            if not way_flag:
+                temp_weight_samples.append(weight_s)
+
+
+        while(len(temp_weight_samples) > 0):
+            shuffle(temp_weight_samples)
+            weight_s = temp_weight_samples.pop()
+            weight_way.append(weight_s)
+            new_temp_weight = []
+            for sample in temp_weight_samples:
+                if get_distance(sample, weight_s) > self.max_radius * weight:
+                    new_temp_weight.append(sample)
+            temp_weight_samples = new_temp_weight
+
+        return weight_way
+
+
+
 

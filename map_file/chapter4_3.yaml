@@ -2,79 +2,78 @@ robots:
   num_of_robot: 2
   robot:
     robot0000:
-      state: [-7.5, -4.0, 90, 0, 0] # x(m), y(m), yaw(degree), v(m/s), omega(degree/s)
+      state: [-2.0, -4.0, 90, 0, 0] # x(m), y(m), yaw(degree), v(m/s), omega(degree/s)
       robot_radius: 0.3 # [m]
-      service: bolt, weld
-      action_cost: [5, 100]
+      service: weld, bolt
+      action_cost: [5, 50]
       ctr_parameter: [1.0, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
       dwa_parameter: [0.1, 2.0, 2.0, 10.0, 1.0] # dt[s], predict time[s], goal_cost_gain, speed_gain, obstacle_gain
     robot0001:
-      state: [7.5, -4.0, 90, 0, 0] # x(m), y(m), yaw(degree), v(m/s), omega(degree/s)
+      state: [2.0, -4.0, 90, 0, 0] # x(m), y(m), yaw(degree), v(m/s), omega(degree/s)
       robot_radius: 0.3 # [m]
-      service: weld, bolt
-      action_cost: [5, 100]
+      service: bolt, weld
+      action_cost: [5, 50]
       ctr_parameter: [1.0, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
       dwa_parameter: [0.1, 2.0, 2.5, 10.0, 0.8] # dt[s], predict time[s], goal_cost_gain, speed_gain, obstacle_gain
-
 goals:
   num_of_goals: 2
   goal:
     goal0000:
       corners:
-      - [8.5, 2.5]
-      - [8.5, 4.5]
-      - [9.5, 4.5]
-      - [9.5, 2.5]
-      - [8.5, 2.5]
+      - [3.5, 3.5]
+      - [3.5, 4.5]
+      - [4.5, 4.5]
+      - [4.5, 3.5]
+      - [3.5, 3.5]
       based: region
       shape: polygon
-      service: bolt, weld
+      service: weld, bolt
       service_type: single_task, single_task
     goal0001:
       corners:
-      - [-8.5, 2.5]
-      - [-8.5, 4.5]
-      - [-9.5, 4.5]
-      - [-9.5, 2.5]
-      - [-8.5, 2.5]
+      - [-4.5, 3.5]
+      - [-4.5, 4.5]
+      - [-3.5, 4.5]
+      - [-3.5, 3.5]
+      - [-4.5, 3.5]
       based: region
       shape: polygon
-      service: bolt, weld
+      service: weld, bolt
       service_type: single_task, single_task
 
 environment:
-  num_of_samples: 700
-  bounds: -10, -5, 10, 5
+  num_of_samples: 600
+  bounds: -5, -5, 5, 5
   obstacles:
     obstacle0000:
       corners:
-      - [-7.0, -5.0]
-      - [-7.0, -0.5]
-      - [7.0, -0.5]
-      - [7.0, -5.0]
-      - [-7.0, -5.0]
+      - [-1.5, -5.0]
+      - [-1.5, -1.0]
+      - [1.5, -1.0]
+      - [1.5, -5.0]
+      - [-1.5, -5.0]
       shape: polygon
     obstacle0001:
       corners:
-      - [-7.0, 0.5]
-      - [-7.0, 5.0]
-      - [7.0, 5.0]
-      - [7.0, 0.5]
-      - [-7.0, 0.5]
+      - [-1.5, 1.0]
+      - [-1.5, 5.0]
+      - [1.5, 5.0]
+      - [1.5, 1.0]
+      - [-1.5, 1.0]
       shape: polygon
     obstacle0002:
       corners:
-      - [8.0, -0.5]
-      - [8.0, 0.5]
-      - [9.0, 0.5]
-      - [9.0, -0.5]
-      - [8.0, -0.5]
+      - [2.5, -0.5]
+      - [2.5, 0.5]
+      - [3.5, 0.5]
+      - [3.5, -0.5]
+      - [2.5, -0.5]
       shape: polygon
     obstacle0003:
       corners:
-      - [-8.0, -0.5]
-      - [-8.0, 0.5]
-      - [-9.0, 0.5]
-      - [-9.0, -0.5]
-      - [-8.0, -0.5]
+      - [-2.5, -0.5]
+      - [-2.5, 0.5]
+      - [-3.5, 0.5]
+      - [-3.5, -0.5]
+      - [-2.5, -0.5]
       shape: polygon

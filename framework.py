@@ -84,7 +84,7 @@ if __name__ == '__main__':
             print("Error: %s : %s"% (f, e.strerror))
 
     # Program Start
-    for t in range(1, trial+1):
+    for t in range(14, trial+1):
         print("----------------------------------------------------------------")
         print("%dth trial start"%t)
 
@@ -128,6 +128,7 @@ if __name__ == '__main__':
         if plot:
             if voronoi:
                 voronoi_plot = plot_voronoi(env, vor_way, goal_samples, t)
+                voronoi_plot = plot_voronoi(env, v_sample, goal_samples, t)
             prm_plot = plot_prm(env, init_samples, init_roadmap, goal_samples, t)
 
         """
@@ -152,6 +153,7 @@ if __name__ == '__main__':
         planFile = 'pddl_prob_plan/%d_plan%d.pddl'%(t, count)
         planFile_c = 'pddl_prob_plan/%d_plan%d_c.pddl'%(t, count)
         best_cost = 1000000
+        best_task = 1000000
         best_robot_path = None
         best_total_cost = 1000000
         best_index = [None, None] # count, Early or Late or Const
@@ -183,6 +185,7 @@ if __name__ == '__main__':
             motionplan_time += elapsed_time
 
             best_cost = makespan
+            best_task = init_task_cost
             best_robot_path = robot_path
             best_total_cost = total_cost
             best_obj_ins = deepcopy(makeprob.obj_ins)
@@ -268,6 +271,7 @@ if __name__ == '__main__':
                 col_count += 1
 
             best_cost = init_motion_cost
+            best_task = init_task_cost
             best_robot_path = init_robot_path
             best_total_cost = init_total_cost
             best_index = [col_count, 0]
@@ -290,6 +294,7 @@ if __name__ == '__main__':
 
             if not next_col:
                 best_cost = init_motion_cost
+                best_task = init_task_cost
                 best_robot_path = init_robot_path
                 best_total_cost = init_total_cost
                 best_index = [count, 0]
@@ -409,6 +414,7 @@ if __name__ == '__main__':
                         print("Const Plan Success")
                         if const_motion_cost < best_cost:
                             best_cost = const_motion_cost
+                            best_task = const_task_cost
                             best_robot_path = const_robot_path
                             best_total_cost = const_total_cost
                             best_index = [count, 2]
@@ -420,6 +426,7 @@ if __name__ == '__main__':
                         exit_flag = True
                         if late_motion_cost < best_cost:
                             best_cost = late_motion_cost
+                            best_task = late_task_cost
                             best_robot_path = late_robot_path
                             best_total_cost = late_total_cost
                             best_index = [count, 1]
@@ -435,6 +442,7 @@ if __name__ == '__main__':
                         exit_flag = True
                         if early_motion_cost < best_cost:
                             best_cost = early_motion_cost
+                            best_task = early_task_cost
                             best_robot_path = early_robot_path
                             best_total_cost = early_total_cost
                             best_index = [count, 0]
@@ -480,11 +488,11 @@ if __name__ == '__main__':
             ele.path = best_robot_path[name]
             ele.path_time = best_robot_path[name]['path_time']
 
-        result_file.write("{},{},{},{},{},{},{},{},{}\n".format(t, best_cost, best_total_cost, endtime,
+        result_file.write("{},{}, {},{},{},{},{},{},{},{}\n".format(t, best_task, best_cost, best_total_cost, endtime,
                                                           roadmap_time, taskplan_time, probmake_time, motionplan_time, colcheck_time))
-
-        animation = Animation(env, best_obj_ins, goal_samples, best_robot_path, v_text)
-        animation.save('figure/output_5s%d.mp4'%t, 2)
+        if t ==1:
+            animation = Animation(env, best_obj_ins, goal_samples, best_robot_path, v_text)
+            animation.save('figure/output_5s%d.mp4'%t, 2)
         # animation.show()
 
     result_file.close()

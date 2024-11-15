@@ -229,6 +229,7 @@ def plot_plan(env, makeprob, goals, robot_path, count, domain, t, figsize=None):
             plot_ax[rr] = ax
         if key in robot_path:
             path = robot_path[key]['path_only']
+            # print(path)
             if len(path) > 1:
                 plot_path(plot_ax[rr], path, rr, val.index)
         if domain == 0:

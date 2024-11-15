@@ -5,29 +5,29 @@ robots:
       state: [0.0, 3.0, 90, 0, 0] # x(m), y(m), yaw(degree), v(m/s), omega(degree/s)
       robot_radius: 0.3 # [m]
       service: weld, bolt
-      action_cost: [8, 100]
-      ctr_parameter: [0.6, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
+      action_cost: [8, 25]
+      ctr_parameter: [1.0, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
       dwa_parameter: [0.1, 2.0, 2.0, 10.0, 1.0] # dt[s], predict time[s], goal_cost_gain, speed_gain, obstacle_gain
     robot0001:
       state: [3.0, 0.0, 90, 0, 0] # x(m), y(m), yaw(degree), v(m/s), omega(degree/s)
       robot_radius: 0.3 # [m]
       service: bolt, weld
-      action_cost: [8, 100]
-      ctr_parameter: [0.6, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
+      action_cost: [8, 25]
+      ctr_parameter: [1.0, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
       dwa_parameter: [0.1, 2.0, 2.5, 10.0, 0.8] # dt[s], predict time[s], goal_cost_gain, speed_gain, obstacle_gain
     robot0002:
       state: [0.0, -3.0, 90, 0, 0] # x(m), y(m), yaw(degree), v(m/s), omega(degree/s)
       robot_radius: 0.3 # [m]
       service: bolt, weld
-      action_cost: [8, 100]
-      ctr_parameter: [0.6, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
+      action_cost: [8, 25]
+      ctr_parameter: [1.0, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
       dwa_parameter: [0.1, 2.0, 2.0, 10.0, 1.0] # dt[s], predict time[s], goal_cost_gain, speed_gain, obstacle_gain
     robot0003:
       state: [-3.0, 0.0, 90, 0, 0] # x(m), y(m), yaw(degree), v(m/s), omega(degree/s)
       robot_radius: 0.3 # [m]
       service: weld, bolt
-      action_cost: [8, 100]
-      ctr_parameter: [0.6, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
+      action_cost: [8, 25]
+      ctr_parameter: [1.0, 0.0, 90.0, 2.5, 90.0] # max_speed[m/s], min_speed[m/s], max_yawrate[degree/s], max_accel[m/ss], max_dyawrate[degree/ss]
       dwa_parameter: [0.1, 2.0, 2.5, 10.0, 0.8] # dt[s], predict time[s], goal_cost_gain, speed_gain, obstacle_gain
 goals:
   num_of_goals: 4

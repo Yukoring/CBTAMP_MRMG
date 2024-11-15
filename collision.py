@@ -32,6 +32,8 @@ def is_narrow_col_with_obstacles(col, prm):
                 count += 1
             if count > 1:
                 narrow_count += 1
+    # For evaluation
+    # return False
 
     if narrow_count > (n_ways/3):
         return True
@@ -500,7 +502,7 @@ def handle_endpoint(prm, new_col):
 
     prm.vor_ways = new_vor_way
 
-    print(new_entry)
+    # print(new_entry)
 
     return new_entry
 
@@ -522,30 +524,37 @@ def make_collision_line(prm, path1, rr1, path2, rr2):
             if i == 1:
                 if type(path1_cost[i-1]) == list:
                     for partial in path1_cost[i-1][2]:
+                        temp_time = round(temp_time,3)
                         if partial[1] == 2:
                             path_with_time1.append((path1_cost[i-1][0], temp_time))
-                            temp_time += round(partial[0], 2)
+                            temp_time += partial[0]
                         else:
                             path_with_time1.append((path1_cost[i-1][0], temp_time, partial[1], partial[2]))
-                            temp_time += round(partial[0], 2)
+                            temp_time += partial[0]
+                    temp_time = round(temp_time,3)
                     path_with_time1.append((path1_cost[i-1][0], temp_time))
                     starts = path1_cost[i-1][0]
                 else:
+                    temp_time = round(temp_time,3)
                     path_with_time1.append((path1_cost[i-1], temp_time))
                     starts = path1_cost[i-1]
             if type(path1_cost[i]) == list:
-                temp_time += round(get_distance(starts, path1_cost[i][0]), 2)
+                temp_time += get_distance(starts, path1_cost[i][0])
+                temp_time = round(temp_time,3)
                 path_with_time1.append((path1_cost[i][0], temp_time))
                 for partial in path1_cost[i][2]:
                     if partial[1] == 2:
-                        temp_time += round(partial[0], 2)
+                        temp_time += partial[0]
+                        temp_time = round(temp_time,3)
                         path_with_time1.append((path1_cost[i][0], temp_time))
                     else:
-                        temp_time += round(partial[0], 2)
+                        temp_time += partial[0]
+                        temp_time = round(temp_time,3)
                         path_with_time1.append((path1_cost[i][0], temp_time, partial[1], partial[2]))
                 starts = path1_cost[i][0]
             else:
-                temp_time += round(get_distance(starts, path1_cost[i]), 2)
+                temp_time += get_distance(starts, path1_cost[i])
+                temp_time = round(temp_time,3)
                 path_with_time1.append((path1_cost[i], temp_time))
                 starts = path1_cost[i]
     else:
@@ -561,30 +570,37 @@ def make_collision_line(prm, path1, rr1, path2, rr2):
             if i == 1:
                 if type(path2_cost[i-1]) == list:
                     for partial in path2_cost[i-1][2]:
+                        temp_time = round(temp_time,3)
                         if partial[1] == 2:
                             path_with_time2.append((path2_cost[i-1][0], temp_time))
-                            temp_time += round(partial[0], 2)
+                            temp_time += partial[0]
                         else:
                             path_with_time2.append((path2_cost[i-1][0], temp_time, partial[1], partial[2]))
-                            temp_time += round(partial[0], 2)
+                            temp_time += partial[0]
+                    temp_time = round(temp_time,3)
                     path_with_time2.append((path2_cost[i-1][0], temp_time))
                     starts = path2_cost[i-1][0]
                 else:
+                    temp_time = round(temp_time,3)
                     path_with_time2.append((path2_cost[i-1], temp_time))
                     starts = path2_cost[i-1]
             if type(path2_cost[i]) == list:
-                temp_time += round(get_distance(starts, path2_cost[i][0]), 2)
+                temp_time += get_distance(starts, path2_cost[i][0])
+                temp_time = round(temp_time,3)
                 path_with_time2.append((path2_cost[i][0], temp_time))
                 for partial in path2_cost[i][2]:
                     if partial[1] == 2:
-                        temp_time += round(partial[0], 2)
+                        temp_time += partial[0]
+                        temp_time = round(temp_time,3)
                         path_with_time2.append((path2_cost[i][0], temp_time))
                     else:
-                        temp_time += round(partial[0], 2)
+                        temp_time += partial[0]
+                        temp_time = round(temp_time,3)
                         path_with_time2.append((path2_cost[i][0], temp_time, partial[1], partial[2]))
                 starts = path2_cost[i][0]
             else:
-                temp_time += round(get_distance(starts, path2_cost[i]), 2)
+                temp_time += get_distance(starts, path2_cost[i])
+                temp_time = round(temp_time,3)
                 path_with_time2.append((path2_cost[i], temp_time))
                 starts = path2_cost[i]
     else:
@@ -615,7 +631,7 @@ def make_collision_line(prm, path1, rr1, path2, rr2):
         buffered_list = []
 
         for pos in ele:
-            buffered_pos = Point(pos).buffer(max_rr*2.0)
+            buffered_pos = Point(pos).buffer(max_rr*2.0) # 2.0 original
             buffered_list.append(buffered_pos)
 
         for sample in samples:
